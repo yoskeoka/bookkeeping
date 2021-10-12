@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"embed"
 	"strings"
-	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -83,8 +82,8 @@ func (gl *DBGeneralLedger) Insert(items ...GeneralLedger) error {
 }
 
 type DBGeneralLedgerFetchOption struct {
-	After  *time.Time
-	Before *time.Time
+	After  sql.NullTime
+	Before sql.NullTime
 }
 
 func (gl *DBGeneralLedger) Fetch(opt DBGeneralLedgerFetchOption) ([]GeneralLedger, error) {
@@ -92,9 +91,13 @@ func (gl *DBGeneralLedger) Fetch(opt DBGeneralLedgerFetchOption) ([]GeneralLedge
 	w := []string{}
 	args := []interface{}{}
 
-	if opt.After != nil {
-		q = append(q, "? < date")
+	if opt.After.Valid {
+		w = append(w, "? <= date")
 		args = append(args, opt.After)
+	}
+	if opt.Before.Valid {
+		w = append(w, "? >= date")
+		args = append(args, opt.Before)
 	}
 
 	if len(w) > 0 {
