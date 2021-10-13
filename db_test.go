@@ -27,14 +27,30 @@ func NewTestDB(t *testing.T) *bookkeeping.DB {
 	}
 
 	t.Cleanup(func() {
-		// TODO: remove test db file
+		tdb.Close()
+		tdb.Delete()
 	})
 
 	return tdb
 }
 
+func initAccounts(t *testing.T, tdb *bookkeeping.DB) {
+	a := bookkeeping.NewDBAccounts(tdb)
+	testAccounts := []bookkeeping.Account{
+		{Code: 1000, Name: "現金", IsBS: true, IsLeft: true},
+		{Code: 3100, Name: "資本金", IsBS: true, IsLeft: false},
+	}
+
+	err := a.Insert(testAccounts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func Test_DBGeneralLedger_Insert(t *testing.T) {
 	tdb := NewTestDB(t)
+	initAccounts(t, tdb)
+
 	gl := bookkeeping.NewDBGeneralLedger(tdb)
 
 	insertItems := []bookkeeping.GeneralLedger{
@@ -145,6 +161,7 @@ func Test_DBGeneralLedger_Fetch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tdb := NewTestDB(t)
+			initAccounts(t, tdb)
 			gl := bookkeeping.NewDBGeneralLedger(tdb)
 
 			err := gl.Insert(tt.args.items...)

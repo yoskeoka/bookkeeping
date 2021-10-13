@@ -11,6 +11,8 @@ type GeneralLedger struct {
 	Description string
 	Left        int
 	Right       int
+
+	Account Account
 }
 
 type Account struct {
