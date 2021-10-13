@@ -90,22 +90,22 @@ func (a *DBAccounts) Insert(items ...Account) error {
 	return tx.Commit()
 }
 
-type DBGeneralLedger struct {
+type DBJournals struct {
 	db *DB
 }
 
-func NewDBGeneralLedger(db *DB) *DBGeneralLedger {
-	return &DBGeneralLedger{db}
+func NewDBJournals(db *DB) *DBJournals {
+	return &DBJournals{db}
 }
 
-func (gl *DBGeneralLedger) Insert(items ...GeneralLedger) error {
-	tx, err := gl.db.dbConn.Begin()
+func (jn *DBJournals) Insert(items ...Journal) error {
+	tx, err := jn.db.dbConn.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare("insert into general_ledger(code, date, description, left, right) values(?, ?, ?, ?, ?)")
+	stmt, err := tx.Prepare("insert into journals(code, date, description, left, right) values(?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -121,29 +121,29 @@ func (gl *DBGeneralLedger) Insert(items ...GeneralLedger) error {
 	return tx.Commit()
 }
 
-type DBGeneralLedgerFetchOption struct {
+type DBJournalsFetchOption struct {
 	After  sql.NullTime
 	Before sql.NullTime
 }
 
-func (gl *DBGeneralLedger) Fetch(opt DBGeneralLedgerFetchOption) ([]GeneralLedger, error) {
+func (jn *DBJournals) Fetch(opt DBJournalsFetchOption) ([]Journal, error) {
 	q := []string{
 		`
-		SELECT gl.id, gl.date, gl.code, gl.description, gl.left, gl.right, 
+		SELECT jn.id, jn.date, jn.code, jn.description, jn.left, jn.right, 
 				a.code, a.name, a.is_bs, a.is_left
-		FROM general_ledger AS gl
-		INNER JOIN accounts AS a ON a.code = gl.code
+		FROM journals AS jn
+		INNER JOIN accounts AS a ON a.code = jn.code
 		`,
 	}
 	w := []string{}
 	args := []interface{}{}
 
 	if opt.After.Valid {
-		w = append(w, "? <= gl.date")
+		w = append(w, "? <= jn.date")
 		args = append(args, opt.After)
 	}
 	if opt.Before.Valid {
-		w = append(w, "? >= gl.date")
+		w = append(w, "? >= jn.date")
 		args = append(args, opt.Before)
 	}
 
@@ -152,7 +152,7 @@ func (gl *DBGeneralLedger) Fetch(opt DBGeneralLedgerFetchOption) ([]GeneralLedge
 	}
 
 	query := strings.Join(q, " ")
-	stmt, err := gl.db.dbConn.Prepare(query)
+	stmt, err := jn.db.dbConn.Prepare(query)
 	if err != nil {
 		return nil, err
 	}
@@ -162,9 +162,9 @@ func (gl *DBGeneralLedger) Fetch(opt DBGeneralLedgerFetchOption) ([]GeneralLedge
 		return nil, err
 	}
 
-	items := []GeneralLedger{}
+	items := []Journal{}
 	for rows.Next() {
-		item := GeneralLedger{}
+		item := Journal{}
 		err := rows.Scan(
 			&item.ID, &item.Date, &item.Code, &item.Description, &item.Left, &item.Right,
 			&item.Account.Code, &item.Account.Name, &item.Account.IsBS, &item.Account.IsLeft,

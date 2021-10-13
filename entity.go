@@ -4,7 +4,7 @@ import (
 	"database/sql"
 )
 
-type GeneralLedger struct {
+type Journal struct {
 	ID          int
 	Date        sql.NullTime
 	Code        int

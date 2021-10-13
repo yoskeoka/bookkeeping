@@ -6,34 +6,34 @@ import (
 
 type Bookkeeping struct {
 	db   *DB
-	dbGL *DBGeneralLedger
+	dbJn *DBJournals
 	dbAc *DBAccounts
 }
 
 func NewBookkeeping(db *DB) *Bookkeeping {
 	return &Bookkeeping{
 		db:   db,
-		dbGL: NewDBGeneralLedger(db),
+		dbJn: NewDBJournals(db),
 		dbAc: NewDBAccounts(db),
 	}
 }
 
-func (bk *Bookkeeping) Post(gl []GeneralLedger) error {
-	if err := balance(gl); err != nil {
+func (bk *Bookkeeping) Post(jn []Journal) error {
+	if err := balance(jn); err != nil {
 		return fmt.Errorf(": %w", err)
 	}
 
-	if err := bk.dbGL.Insert(gl...); err != nil {
+	if err := bk.dbJn.Insert(jn...); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func balance(gl []GeneralLedger) error {
+func balance(jn []Journal) error {
 	leftSum, rightSum := 0, 0
 
-	for _, item := range gl {
+	for _, item := range jn {
 		leftSum += item.Left
 		rightSum += item.Right
 	}

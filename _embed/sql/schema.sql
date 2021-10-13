@@ -8,8 +8,8 @@ create table accounts(
     is_left boolean
 );
 
-drop table if exists general_ledger;
-create table general_ledger(
+drop table if exists journals;
+create table journals(
     id integer not null primary key,
     date date,
     code integer,
