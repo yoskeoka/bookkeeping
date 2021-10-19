@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/yoskeoka/bookkeeping"
 )
@@ -14,6 +15,10 @@ func main() {
 	os.Exit(exitCode)
 }
 
+var (
+	databaseName string = "bookkeeping.db"
+)
+
 func cli() int {
 	commands := []command{
 		postCmd(),
@@ -21,6 +26,16 @@ func cli() int {
 
 	fset := flag.NewFlagSet("bk", flag.ExitOnError)
 	version := fset.Bool("version", false, "Print version")
+
+	glOpts := &globalOpts{}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Print(err)
+		return 1
+	}
+
+	glOpts.dataDir = filepath.Join(homeDir, ".bookkeeping")
 
 	fset.Usage = func() {
 		fmt.Fprintln(fset.Output(), "Usage: bk <command> [command flags]")
@@ -52,7 +67,7 @@ func cli() int {
 	subCmd := args[0]
 	for _, cmd := range commands {
 		if cmd.name == subCmd {
-			err := cmd.fn(args[1:])
+			err := cmd.fn(args[1:], glOpts)
 			if err != nil {
 				log.Print(err)
 				return 1
@@ -66,15 +81,12 @@ func cli() int {
 	return 1
 }
 
+type globalOpts struct {
+	dataDir string
+}
+
 type command struct {
 	name string
 	fset *flag.FlagSet
-	fn   func(args []string) error
-}
-
-func postCmd() command {
-
-	return command{
-		name: "post",
-	}
+	fn   func(args []string, gOpts *globalOpts) error
 }

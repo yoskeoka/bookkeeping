@@ -18,12 +18,6 @@ type DB struct {
 }
 
 func NewDB(path string) (*DB, error) {
-	// homeDir, err := os.UserHomeDir()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// f := filepath.Join(homeDir, "bookkeeping.db")
-
 	sqlDB, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, err
