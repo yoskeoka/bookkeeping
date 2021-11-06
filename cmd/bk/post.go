@@ -76,12 +76,12 @@ func parseJournalItem(s string) (accCode int, amount int, desc string, err error
 
 	code, err := strconv.Atoi(cols[0])
 	if err != nil {
-		return 0, 0, "", fmt.Errorf("cannot parse '%s' as account code", cols[0])
+		return 0, 0, "", fmt.Errorf("cannot parse '%s' as account code: %w", cols[0], err)
 	}
 
 	a, err := strconv.Atoi(cols[1])
 	if err != nil {
-		return 0, 0, "", fmt.Errorf("cannot parse '%s' as amount", cols[1])
+		return 0, 0, "", fmt.Errorf("cannot parse '%s' as amount: %w", cols[1], err)
 	}
 
 	d := ""

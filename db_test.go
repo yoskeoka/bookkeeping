@@ -98,62 +98,66 @@ func date(year int, month time.Month, day int) sql.NullTime {
 
 func Test_DBJournals_Fetch(t *testing.T) {
 	type args struct {
-		items     []bookkeeping.Journal
-		opt       bookkeeping.DBJournalsFetchOption
-		wantItems []bookkeeping.Journal
+		opt bookkeeping.DBJournalsFetchOption
 	}
 	tests := []struct {
-		name string
-		args args
+		name      string
+		args      args
+		seedItems []bookkeeping.Journal
+		wantItems []bookkeeping.Journal
 	}{
 		{
 			"After",
-			args{
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
-					{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
-					{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
-					{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
-				},
-				bookkeeping.DBJournalsFetchOption{After: date(2021, 01, 16)},
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
-					{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
-				},
+			args{bookkeeping.DBJournalsFetchOption{After: date(2021, 01, 16)}},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
+				{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
+				{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
+				{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
+			},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
+				{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
 			},
 		},
 		{
-			"Before",
-			args{
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
-					{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
-					{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
-					{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
-				},
-				bookkeeping.DBJournalsFetchOption{Before: date(2021, 01, 03)},
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
-					{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
-				},
+			"Before", args{bookkeeping.DBJournalsFetchOption{Before: date(2021, 01, 03)}},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
+				{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
+				{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
+				{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
+			},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
+				{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
 			},
 		},
 		{
 			"Between (Before-After)",
-			args{
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
-					{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
-					{Date: date(2021, 01, 10), Code: 1000, Description: "現金", Left: 500000, Right: 0},
-					{Date: date(2021, 01, 10), Code: 3100, Description: "資本金", Left: 0, Right: 500000},
-					{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
-					{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
-				},
-				bookkeeping.DBJournalsFetchOption{After: date(2021, 01, 10), Before: date(2021, 01, 10)},
-				[]bookkeeping.Journal{
-					{Date: date(2021, 01, 10), Code: 1000, Description: "現金", Left: 500000, Right: 0},
-					{Date: date(2021, 01, 10), Code: 3100, Description: "資本金", Left: 0, Right: 500000},
-				},
+			args{bookkeeping.DBJournalsFetchOption{After: date(2021, 01, 10), Before: date(2021, 01, 10)}},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
+				{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
+				{Date: date(2021, 01, 10), Code: 1000, Description: "現金", Left: 500000, Right: 0},
+				{Date: date(2021, 01, 10), Code: 3100, Description: "資本金", Left: 0, Right: 500000},
+				{Date: date(2021, 01, 16), Code: 1000, Description: "現金", Left: 20000, Right: 0},
+				{Date: date(2021, 01, 16), Code: 3100, Description: "資本金", Left: 0, Right: 20000},
+			},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 10), Code: 1000, Description: "現金", Left: 500000, Right: 0},
+				{Date: date(2021, 01, 10), Code: 3100, Description: "資本金", Left: 0, Right: 500000},
+			},
+		},
+		{
+			"Code",
+			args{bookkeeping.DBJournalsFetchOption{Code: []int{1000}}},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
+				{Date: date(2021, 01, 03), Code: 3100, Description: "資本金", Left: 0, Right: 100000},
+			},
+			[]bookkeeping.Journal{
+				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},
 			},
 		},
 	}
@@ -164,7 +168,7 @@ func Test_DBJournals_Fetch(t *testing.T) {
 			initAccounts(t, tdb)
 			jn := bookkeeping.NewDBJournals(tdb)
 
-			err := jn.Insert(tt.args.items...)
+			err := jn.Insert(tt.seedItems...)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -174,24 +178,24 @@ func Test_DBJournals_Fetch(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if len(gotItems) != len(tt.args.wantItems) {
-				t.Errorf("DBJournals.Fetch(opt) want %v items, but got %v", len(tt.args.wantItems), len(gotItems))
+			if len(gotItems) != len(tt.wantItems) {
+				t.Errorf("DBJournals.Fetch(opt) want %v items, but got %v", len(tt.wantItems), len(gotItems))
 			}
 
-			if !reflect.DeepEqual(gotItems[0].Date, tt.args.wantItems[0].Date) {
-				t.Errorf("DBJournals.Fetch(opt) should return Date = %+v, but got %+v", tt.args.wantItems[0].Date, gotItems[0].Date)
+			if !reflect.DeepEqual(gotItems[0].Date, tt.wantItems[0].Date) {
+				t.Errorf("DBJournals.Fetch(opt) should return Date = %+v, but got %+v", tt.wantItems[0].Date, gotItems[0].Date)
 			}
-			if gotItems[0].Code != tt.args.wantItems[0].Code {
-				t.Errorf("DBJournals.Fetch(opt) should return Code = %v, but got %v", tt.args.wantItems[0].Code, gotItems[0].Code)
+			if gotItems[0].Code != tt.wantItems[0].Code {
+				t.Errorf("DBJournals.Fetch(opt) should return Code = %v, but got %v", tt.wantItems[0].Code, gotItems[0].Code)
 			}
-			if gotItems[0].Description != tt.args.wantItems[0].Description {
-				t.Errorf("DBJournals.Fetch(opt) should return Description = %v, but got %v", tt.args.wantItems[0].Description, gotItems[0].Description)
+			if gotItems[0].Description != tt.wantItems[0].Description {
+				t.Errorf("DBJournals.Fetch(opt) should return Description = %v, but got %v", tt.wantItems[0].Description, gotItems[0].Description)
 			}
-			if gotItems[0].Left != tt.args.wantItems[0].Left {
-				t.Errorf("DBJournals.Fetch(opt) should return Left = %v, but got %v", tt.args.wantItems[0].Left, gotItems[0].Left)
+			if gotItems[0].Left != tt.wantItems[0].Left {
+				t.Errorf("DBJournals.Fetch(opt) should return Left = %v, but got %v", tt.wantItems[0].Left, gotItems[0].Left)
 			}
-			if gotItems[0].Right != tt.args.wantItems[0].Right {
-				t.Errorf("DBJournals.Fetch(opt) should return Right = %v, but got %v", tt.args.wantItems[0].Right, gotItems[0].Right)
+			if gotItems[0].Right != tt.wantItems[0].Right {
+				t.Errorf("DBJournals.Fetch(opt) should return Right = %v, but got %v", tt.wantItems[0].Right, gotItems[0].Right)
 			}
 		})
 	}

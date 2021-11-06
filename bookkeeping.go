@@ -30,6 +30,14 @@ func (bk *Bookkeeping) Post(jn []Journal) error {
 	return nil
 }
 
+type FetchGLOpts struct {
+	accountIDList []int
+}
+
+func (bk *Bookkeeping) FetchGL(opts ...FetchGLOpts) ([]Journal, error) {
+	return nil, nil
+}
+
 func balance(jn []Journal) error {
 	leftSum, rightSum := 0, 0
 

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,7 +28,9 @@ func cli() int {
 	fset := flag.NewFlagSet("bk", flag.ExitOnError)
 	version := fset.Bool("version", false, "Print version")
 
-	glOpts := &globalOpts{}
+	glOpts := &globalOpts{
+		output: os.Stdout,
+	}
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -83,6 +86,7 @@ func cli() int {
 
 type globalOpts struct {
 	dataDir string
+	output  io.Writer
 }
 
 type command struct {

@@ -118,6 +118,7 @@ func (jn *DBJournals) Insert(items ...Journal) error {
 type DBJournalsFetchOption struct {
 	After  sql.NullTime
 	Before sql.NullTime
+	Code   []int
 }
 
 func (jn *DBJournals) Fetch(opt DBJournalsFetchOption) ([]Journal, error) {
@@ -139,6 +140,12 @@ func (jn *DBJournals) Fetch(opt DBJournalsFetchOption) ([]Journal, error) {
 	if opt.Before.Valid {
 		w = append(w, "? >= jn.date")
 		args = append(args, opt.Before)
+	}
+	if len(opt.Code) > 0 {
+		w = append(w, "jn.code IN ("+strings.Repeat("?,", len(opt.Code)-1)+"?)")
+		for _, c := range opt.Code {
+			args = append(args, c)
+		}
 	}
 
 	if len(w) > 0 {
