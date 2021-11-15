@@ -23,6 +23,7 @@ var (
 func cli() int {
 	commands := []command{
 		postCmd(),
+		glCmd(),
 	}
 
 	fset := flag.NewFlagSet("bk", flag.ExitOnError)
@@ -57,7 +58,7 @@ func cli() int {
 	fset.Parse(os.Args[1:])
 
 	if *version {
-		fmt.Printf("Version: %s", bookkeeping.CommitHash)
+		fmt.Fprintf(fset.Output(), "Version: %s\n", bookkeeping.CommitHash)
 		return 0
 	}
 

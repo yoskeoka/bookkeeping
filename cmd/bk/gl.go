@@ -15,7 +15,7 @@ func glCmd() command {
 	fset.Func("code", "Account code.", func(s string) error {
 		code, err := strconv.Atoi(s)
 		if err != nil {
-			return fmt.Errorf(": %w")
+			return fmt.Errorf("cannot parse '%s' as account code: %w", s, err)
 		}
 
 		opts.code = append(opts.code, code)
@@ -44,7 +44,11 @@ func gl(opts *glOpts, glOpts *globalOpts) error {
 	}
 	bk := bookkeeping.NewBookkeeping(db)
 
-	items, err := bk.FetchGL()
+	fetchGLOpts := bookkeeping.FetchGLOpts{
+		AccountIDList: append(make([]int, 0, len(opts.code)), opts.code...),
+	}
+
+	items, err := bk.FetchGL(fetchGLOpts)
 	if err != nil {
 		return err
 	}

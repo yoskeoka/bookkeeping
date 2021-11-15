@@ -20,7 +20,7 @@ func NewBookkeeping(db *DB) *Bookkeeping {
 
 func (bk *Bookkeeping) Post(jn []Journal) error {
 	if err := balance(jn); err != nil {
-		return fmt.Errorf(": %w", err)
+		return fmt.Errorf("journals are not balancing: %w", err)
 	}
 
 	if err := bk.dbJn.Insert(jn...); err != nil {
@@ -31,11 +31,27 @@ func (bk *Bookkeeping) Post(jn []Journal) error {
 }
 
 type FetchGLOpts struct {
-	accountIDList []int
+	AccountIDList []int
 }
 
-func (bk *Bookkeeping) FetchGL(opts ...FetchGLOpts) ([]Journal, error) {
-	return nil, nil
+func (bk *Bookkeeping) FetchGL(opts ...FetchGLOpts) (map[int][]Journal, error) {
+	jnFetchOpts := DBJournalsFetchOption{}
+	for _, o := range opts {
+		jnFetchOpts.Code = append(jnFetchOpts.Code, o.AccountIDList...)
+	}
+	journals, err := bk.dbJn.Fetch(jnFetchOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[int][]Journal)
+	for _, j := range journals {
+		if _, ok := res[j.Code]; !ok {
+			res[j.Code] = []Journal{}
+		}
+		res[j.Code] = append(res[j.Code], j)
+	}
+	return res, err
 }
 
 func balance(jn []Journal) error {

@@ -55,6 +55,16 @@ func post(opts *postOpts, glOpts *globalOpts) error {
 		journalItems = append(journalItems, jn)
 	}
 
+	for _, s := range opts.right {
+		code, amnt, desc, err := parseJournalItem(s)
+		if err != nil {
+			return err
+		}
+		jn := bookkeeping.Journal{Code: code, Right: amnt, Description: desc, Date: sql.NullTime{Time: opts.date, Valid: true}}
+
+		journalItems = append(journalItems, jn)
+	}
+
 	db, err := bookkeeping.NewDB(filepath.Join(glOpts.dataDir, databaseName))
 	if err != nil {
 		return err

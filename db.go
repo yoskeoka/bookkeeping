@@ -3,7 +3,10 @@ package bookkeeping
 import (
 	"database/sql"
 	"embed"
+	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	_ "modernc.org/sqlite"
@@ -18,9 +21,25 @@ type DB struct {
 }
 
 func NewDB(path string) (*DB, error) {
+	dir := filepath.Dir(path)
+	_, statDirErr := os.Stat(dir)
+	if errors.Is(statDirErr, os.ErrNotExist) {
+		err := os.MkdirAll(dir, 0744)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var initRequired = false
+
+	_, dbStatErr := os.Stat(path)
+	if errors.Is(dbStatErr, os.ErrNotExist) {
+		initRequired = true
+	}
+
 	sqlDB, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot open database file %s: %v", path, err)
 	}
 
 	db := &DB{
@@ -28,16 +47,47 @@ func NewDB(path string) (*DB, error) {
 		dbConn:     sqlDB,
 	}
 
+	if initRequired {
+		fmt.Println("initializing database...")
+		if err := db.InitSchema(); err != nil {
+			return nil, fmt.Errorf("database init schema error: %v", err)
+		}
+
+		if err := db.InitAccounts(); err != nil {
+			return nil, fmt.Errorf("database init accounts data error: %v", err)
+		}
+		fmt.Println("database initialized:", path)
+	}
+
 	return db, nil
 }
 
-func (d *DB) Init() error {
+func (d *DB) InitSchema() error {
 	sb, err := sqlFiles.ReadFile("_embed/sql/schema.sql")
 	if err != nil {
 		return err
 	}
 
 	_, err = d.dbConn.Exec(string(sb))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *DB) InitAccounts() error {
+	acc, err := sqlFiles.ReadFile("_embed/sql/accounts_ja.sql")
+	if err != nil {
+		return err
+	}
+
+	_, err = d.dbConn.Exec("delete from accounts")
+	if err != nil {
+		return err
+	}
+
+	_, err = d.dbConn.Exec(string(acc))
 	if err != nil {
 		return err
 	}

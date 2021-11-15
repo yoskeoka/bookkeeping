@@ -21,7 +21,7 @@ func NewTestDB(t *testing.T) *bookkeeping.DB {
 		t.Fatal(err)
 	}
 
-	err = tdb.Init()
+	err = tdb.InitSchema()
 	if err != nil {
 		t.Fatal(err)
 	}
