@@ -24,6 +24,7 @@ func cli() int {
 	commands := []command{
 		postCmd(),
 		glCmd(),
+		deletedbCmd(),
 	}
 
 	fset := flag.NewFlagSet("bk", flag.ExitOnError)

@@ -100,7 +100,11 @@ func (d *DB) Close() error {
 }
 
 func (d *DB) Delete() error {
-	return os.Remove(d.dbFilePath)
+	err := os.Remove(d.dbFilePath)
+	if err != nil {
+		return fmt.Errorf("cannot delete database: %v", err)
+	}
+	return nil
 }
 
 type DBAccounts struct {
