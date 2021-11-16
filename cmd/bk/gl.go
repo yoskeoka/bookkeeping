@@ -3,8 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/yoskeoka/bookkeeping"
 )
@@ -54,7 +57,38 @@ func gl(opts *glOpts, glOpts *globalOpts) error {
 		return err
 	}
 
-	fmt.Fprintln(glOpts.output, items)
+	printGL(glOpts.output, items)
 
 	return nil
+}
+
+func printGL(w io.Writer, items map[int][]bookkeeping.Journal) {
+	fmt.Fprintln(w, "General Ledger:")
+
+	for code, item := range items {
+		first := item[0]
+		fmt.Fprintln(w)
+		printGLItem(w, code, first.Account.Name, item)
+	}
+}
+
+func printGLItem(w io.Writer, code int, name string, items []bookkeeping.Journal) {
+
+	fmt.Fprintf(w, "Account code %d: '%s'\n", code, name)
+	fprintLFW(w, "date", 20)
+	fprintLFW(w, "description", 40)
+	fprintLFW(w, "debit", 20)
+	fprintLFW(w, "credit", 20)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, strings.Repeat("-", 100))
+
+	sort.SliceStable(items, func(i, j int) bool { return items[i].Date.Time.Before(items[j].Date.Time) })
+
+	for _, item := range items {
+		fprintLFW(w, item.Date.Time.Format("2006/01/02"), 20)
+		fprintLFW(w, item.Description, 40)
+		fprintLFW(w, strconv.Itoa(item.Left), 20)
+		fprintLFW(w, strconv.Itoa(item.Right), 20)
+		fmt.Fprintln(w)
+	}
 }
