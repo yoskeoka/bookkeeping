@@ -3,9 +3,13 @@ module github.com/yoskeoka/bookkeeping
 go 1.17
 
 require (
+	github.com/mattn/go-runewidth v0.0.13
+	modernc.org/sqlite v1.13.1
+)
+
+require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	golang.org/x/mod v0.3.0 // indirect
@@ -19,7 +23,6 @@ require (
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.0.5 // indirect
 	modernc.org/opt v0.1.1 // indirect
-	modernc.org/sqlite v1.13.1 // indirect
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/token v1.0.0 // indirect
 )

@@ -3,6 +3,7 @@ package bookkeeping
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
 type Bookkeeping struct {
@@ -24,10 +25,36 @@ func (bk *Bookkeeping) Post(jn []Journal) error {
 		return fmt.Errorf("journals are not balancing: %w", err)
 	}
 
+	for _, j := range jn {
+		if err := bk.validateJournalRecord(j); err != nil {
+			return err
+		}
+	}
+
 	if err := bk.dbJn.Insert(jn...); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (bk *Bookkeeping) validateJournalRecord(j Journal) error {
+	accs, err := bk.dbAc.Fetch(DBAccountsFetchOption{CodePattern: strconv.Itoa(j.Code)})
+	if err != nil {
+		return err
+	}
+
+	if len(accs) != 1 {
+		desc := ""
+		if len(j.Description) > 0 {
+			desc = "/" + j.Description
+		}
+		norm := "debit"
+		if j.Right > 0 {
+			norm = "credit"
+		}
+		return fmt.Errorf("code '%d' is not available (in journal %s record '%d/%d%s')", j.Code, norm, j.Code, j.Left+j.Right, desc)
+	}
 	return nil
 }
 
@@ -81,6 +108,10 @@ func balance(jn []Journal) error {
 	for _, item := range jn {
 		leftSum += item.Left
 		rightSum += item.Right
+	}
+
+	if leftSum == 0 || rightSum == 0 {
+		return fmt.Errorf("credit or debit is zero-amount")
 	}
 
 	if leftSum != rightSum {
