@@ -14,7 +14,7 @@ import (
 
 func postCmd() command {
 	fset := flag.NewFlagSet("bk post", flag.ExitOnError)
-	opts := &postOpts{}
+	opts := &postOpts{date: time.Now()}
 	fset.Var(&dateFlag{&opts.date}, "date", "Journal post date. (format: yyyymmdd)")
 	fset.Func("left", "Journal debit item. (format: <account code>/<amount>[/<description>]", func(v string) error {
 		opts.left = append(opts.left, v)
@@ -26,8 +26,9 @@ func postCmd() command {
 	})
 
 	return command{
-		name: "post",
-		fset: fset,
+		name:        "post",
+		description: "Post journal",
+		fset:        fset,
 		fn: func(args []string, glOpts *globalOpts) error {
 			fset.Parse(args)
 			return post(opts, glOpts)

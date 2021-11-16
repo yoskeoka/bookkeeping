@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/yoskeoka/bookkeeping"
 )
@@ -22,6 +23,7 @@ var (
 
 func cli() int {
 	commands := []command{
+		accountCmd(),
 		postCmd(),
 		glCmd(),
 		deletedbCmd(),
@@ -45,14 +47,15 @@ func cli() int {
 	fset.Usage = func() {
 		fmt.Fprintln(fset.Output(), "Usage: bk <command> [command flags]")
 		fset.PrintDefaults()
+
+		fmt.Fprintln(fset.Output())
+		fmt.Fprintln(fset.Output(), "Commands:")
 		for _, cmd := range commands {
 			if cmd.fset == nil || cmd.fn == nil {
 				continue // skip not implemented
 			}
 
-			fmt.Fprintf(fset.Output(), "\n%s command:\n", cmd.name)
-			cmd.fset.SetOutput(fset.Output())
-			cmd.fset.PrintDefaults()
+			fmt.Fprintf(fset.Output(), "  %s:%s%s\n", cmd.name, strings.Repeat(" ", 12-len(cmd.name)), cmd.description)
 		}
 	}
 
@@ -69,21 +72,35 @@ func cli() int {
 		return 1
 	}
 
+	err = subcmd("bk", commands, args, glOpts)
+	if err != nil {
+		fmt.Fprint(fset.Output(), err)
+		return 1
+	}
+
+	return 0
+}
+
+func subcmd(parentCmd string, subCommands []command, args []string, glOpts *globalOpts) error {
+
 	subCmd := args[0]
-	for _, cmd := range commands {
+	for _, cmd := range subCommands {
 		if cmd.name == subCmd {
+
+			if len(args) == 1 && cmd.hasSubcommand {
+				cmd.fset.Usage()
+				return nil
+			}
+
 			err := cmd.fn(args[1:], glOpts)
 			if err != nil {
-				log.Print(err)
-				return 1
+				return err
 			}
-			return 0
+			return nil
 		}
 	}
 
-	log.Printf("Unknown command: %s", subCmd)
-
-	return 1
+	return fmt.Errorf("unknown command: '%s' for '%v'", subCmd, parentCmd)
 }
 
 type globalOpts struct {
@@ -92,7 +109,9 @@ type globalOpts struct {
 }
 
 type command struct {
-	name string
-	fset *flag.FlagSet
-	fn   func(args []string, gOpts *globalOpts) error
+	name          string
+	description   string
+	hasSubcommand bool
+	fset          *flag.FlagSet
+	fn            func(args []string, gOpts *globalOpts) error
 }

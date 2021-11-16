@@ -20,5 +20,8 @@ func (d *dateFlag) Set(v string) error {
 }
 
 func (d *dateFlag) String() string {
+	if d.date == nil {
+		return "0000101"
+	}
 	return d.date.Format("20060102")
 }

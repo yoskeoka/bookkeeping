@@ -138,6 +138,62 @@ func (a *DBAccounts) Insert(items ...Account) error {
 	return tx.Commit()
 }
 
+type DBAccountsFetchOption struct {
+	CodePattern        string
+	DescriptionPattern string
+}
+
+func (a *DBAccounts) Fetch(opt DBAccountsFetchOption) ([]Account, error) {
+	q := []string{
+		`
+		SELECT *
+		FROM accounts
+		`,
+	}
+	w := []string{}
+	args := []interface{}{}
+
+	if opt.CodePattern != "" {
+		w = append(w, "code LIKE ?")
+		p := strings.ReplaceAll(opt.CodePattern, "*", "%")
+		args = append(args, p)
+	}
+
+	if opt.DescriptionPattern != "" {
+		w = append(w, "name LIKE ?")
+		p := strings.ReplaceAll(opt.DescriptionPattern, "*", "%")
+		args = append(args, p)
+	}
+
+	if len(w) > 0 {
+		q = append(q, "WHERE", strings.Join(w, " AND"))
+	}
+
+	query := strings.Join(q, " ")
+	stmt, err := a.db.dbConn.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return nil, err
+	}
+
+	items := []Account{}
+	for rows.Next() {
+		item := Account{}
+		err := rows.Scan(
+			&item.Code, &item.Name, &item.IsBS, &item.IsLeft,
+		)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
 type DBJournals struct {
 	db *DB
 }

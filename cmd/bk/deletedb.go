@@ -11,8 +11,9 @@ func deletedbCmd() command {
 	fset := flag.NewFlagSet("bk deletedb", flag.ExitOnError)
 
 	return command{
-		name: "deletedb",
-		fset: fset,
+		name:        "deletedb",
+		description: "Delete all journals",
+		fset:        fset,
 		fn: func(args []string, glOpts *globalOpts) error {
 			fset.Parse(args)
 			return deletedb(glOpts)
