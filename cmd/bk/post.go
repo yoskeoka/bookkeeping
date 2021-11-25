@@ -55,6 +55,16 @@ func post(opts *postOpts, glOpts *globalOpts) error {
 		journalItems = append(journalItems, jn)
 	}
 
+	for _, s := range opts.right {
+		code, amnt, desc, err := parseJournalItem(s)
+		if err != nil {
+			return err
+		}
+		jn := bookkeeping.Journal{Code: code, Right: amnt, Description: desc, Date: sql.NullTime{Time: opts.date, Valid: true}}
+
+		journalItems = append(journalItems, jn)
+	}
+
 	db, err := bookkeeping.NewDB(filepath.Join(glOpts.dataDir, databaseName))
 	if err != nil {
 		return err
@@ -76,12 +86,12 @@ func parseJournalItem(s string) (accCode int, amount int, desc string, err error
 
 	code, err := strconv.Atoi(cols[0])
 	if err != nil {
-		return 0, 0, "", fmt.Errorf("cannot parse '%s' as account code", cols[0])
+		return 0, 0, "", fmt.Errorf("cannot parse '%s' as account code: %w", cols[0], err)
 	}
 
 	a, err := strconv.Atoi(cols[1])
 	if err != nil {
-		return 0, 0, "", fmt.Errorf("cannot parse '%s' as amount", cols[1])
+		return 0, 0, "", fmt.Errorf("cannot parse '%s' as amount: %w", cols[1], err)
 	}
 
 	d := ""
