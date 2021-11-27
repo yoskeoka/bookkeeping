@@ -23,8 +23,9 @@ func glCmd() command {
 	})
 
 	return command{
-		name: "gl",
-		fset: fset,
+		name:        "gl",
+		description: "Show general ledger",
+		fset:        fset,
 		fn: func(args []string, glOpts *globalOpts) error {
 			fset.Parse(args)
 			return gl(opts, glOpts)

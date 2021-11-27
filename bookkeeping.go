@@ -2,6 +2,7 @@ package bookkeeping
 
 import (
 	"fmt"
+	"regexp"
 )
 
 type Bookkeeping struct {
@@ -28,6 +29,26 @@ func (bk *Bookkeeping) Post(jn []Journal) error {
 	}
 
 	return nil
+}
+
+type FetchAcOpts struct {
+	CodeFilter string
+	DescFilter string
+}
+
+var accountCodePattern = regexp.MustCompile("[*0-9]+")
+
+func (bk *Bookkeeping) FetchAc(opt FetchAcOpts) ([]Account, error) {
+
+	if len(opt.CodeFilter) > 0 && !accountCodePattern.MatchString(opt.CodeFilter) {
+		return nil, fmt.Errorf("code filter may contain numbers or '*' for wildcard")
+	}
+
+	acFetchOpt := DBAccountsFetchOption{
+		CodePattern:        opt.CodeFilter,
+		DescriptionPattern: opt.DescFilter,
+	}
+	return bk.dbAc.Fetch(acFetchOpt)
 }
 
 type FetchGLOpts struct {
