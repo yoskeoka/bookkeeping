@@ -57,6 +57,10 @@ func gl(opts *glOpts, glOpts *globalOpts) error {
 		return err
 	}
 
+	if len(items) == 0 {
+		return fmt.Errorf("no journal records found")
+	}
+
 	printGL(glOpts.output, items)
 
 	return nil
@@ -82,6 +86,7 @@ func printGLItem(w io.Writer, code int, name string, items []bookkeeping.Journal
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, strings.Repeat("-", 100))
 
+	sort.Slice(items, func(i, j int) bool { return items[i].ID < items[j].ID })
 	sort.SliceStable(items, func(i, j int) bool { return items[i].Date.Time.Before(items[j].Date.Time) })
 
 	for _, item := range items {
