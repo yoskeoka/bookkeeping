@@ -150,7 +150,7 @@ func Test_DBJournals_Fetch(t *testing.T) {
 			},
 		},
 		{
-			"Code",
+			"CodePatterns",
 			args{bookkeeping.DBJournalsFetchOption{Code: []int{1000}}},
 			[]bookkeeping.Journal{
 				{Date: date(2021, 01, 03), Code: 1000, Description: "現金", Left: 100000, Right: 0},

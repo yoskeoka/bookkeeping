@@ -1,9 +1,11 @@
 package bookkeeping
 
 import (
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type Bookkeeping struct {
@@ -100,6 +102,110 @@ func (bk *Bookkeeping) FetchGL(opts ...FetchGLOpts) (map[int][]Journal, error) {
 		res[j.Code] = append(res[j.Code], j)
 	}
 	return res, err
+}
+
+type PL struct {
+	NetSales                            int
+	CostSales                           int
+	GrossProfit                         int
+	OperatingExpences                   int
+	OperatingIncome                     int
+	NonOperatingIncomes                 int
+	NonOperatingExpences                int
+	ExtraordinaryIncomes                int
+	ExtraordinaryExpences               int
+	IncomeBeforeProvisionForIncomeTaxes int
+	ProvisionForIncomeTaxes             int
+	NetIncome                           int
+}
+
+type FetchPLOpts struct {
+	Start time.Time
+	End   time.Time
+}
+
+func (bk *Bookkeeping) FetchPL(opt FetchPLOpts) (PL, error) {
+	pl := PL{}
+	dbOpt := DBJournalsFetchOption{}
+	if !opt.Start.IsZero() {
+		dbOpt.After = sql.NullTime{Time: opt.Start, Valid: true}
+	}
+	if !opt.End.IsZero() {
+		dbOpt.Before = sql.NullTime{Time: opt.End, Valid: true}
+	}
+	sales, err := bk.dbJn.Fetch(dbOpt.CodeRange(4000, 4999))
+	if err != nil {
+		return pl, err
+	}
+	pl.NetSales = sumJournal(sales)
+
+	costSales, err := bk.dbJn.Fetch(dbOpt.CodeRange(5000, 6999))
+	if err != nil {
+		return pl, err
+	}
+	pl.CostSales = sumJournal(costSales)
+	pl.GrossProfit = pl.NetSales - pl.CostSales
+
+	operatingExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(7000, 7999))
+	if err != nil {
+		return pl, err
+	}
+	pl.OperatingExpences = sumJournal(operatingExpences)
+	pl.OperatingIncome = pl.GrossProfit - pl.OperatingExpences
+
+	nonOperatingIncomes, err := bk.dbJn.Fetch(dbOpt.CodeRange(8100, 8199))
+	if err != nil {
+		return pl, err
+	}
+	pl.NonOperatingIncomes = sumJournal(nonOperatingIncomes)
+
+	nonOperatingExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(8200, 8299))
+	if err != nil {
+		return pl, err
+	}
+	pl.NonOperatingExpences = sumJournal(nonOperatingExpences)
+
+	extraordinaryIncomes, err := bk.dbJn.Fetch(dbOpt.CodeRange(8300, 8399))
+	if err != nil {
+		return pl, err
+	}
+	pl.ExtraordinaryIncomes = sumJournal(extraordinaryIncomes)
+
+	extraordinaryExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(8400, 8499))
+	if err != nil {
+		return pl, err
+	}
+	pl.ExtraordinaryExpences = sumJournal(extraordinaryExpences)
+
+	pl.IncomeBeforeProvisionForIncomeTaxes = pl.OperatingIncome +
+		pl.NonOperatingIncomes - pl.NonOperatingExpences +
+		pl.ExtraordinaryIncomes - pl.ExtraordinaryExpences
+
+	provisionForIncomeTaxes, err := bk.dbJn.Fetch(dbOpt.CodeRange(9000, 9999))
+	if err != nil {
+		return pl, err
+	}
+
+	pl.ProvisionForIncomeTaxes = sumJournal(provisionForIncomeTaxes)
+
+	pl.NetIncome = pl.IncomeBeforeProvisionForIncomeTaxes - pl.ProvisionForIncomeTaxes
+
+	return pl, nil
+}
+
+func sumJournal(jnn ...[]Journal) int {
+	sum := 0
+
+	for _, jn := range jnn {
+		for _, j := range jn {
+			if j.Account.IsLeft {
+				sum += j.Left - j.Right
+			} else {
+				sum += j.Right - j.Left
+			}
+		}
+	}
+	return sum
 }
 
 func balance(jn []Journal) error {

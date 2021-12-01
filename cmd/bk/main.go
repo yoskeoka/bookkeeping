@@ -26,6 +26,7 @@ func cli() int {
 		accountCmd(),
 		postCmd(),
 		glCmd(),
+		plCmd(),
 		deletedbCmd(),
 	}
 
