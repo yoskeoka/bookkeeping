@@ -229,6 +229,17 @@ type DBJournalsFetchOption struct {
 	After  sql.NullTime
 	Before sql.NullTime
 	Code   []int
+
+	// this may conflict with Code
+	CodeRangeFrom int
+	// this may conflict with Code
+	CodeRangeTo int
+}
+
+func (opt DBJournalsFetchOption) CodeRange(from, to int) DBJournalsFetchOption {
+	opt.CodeRangeFrom = from
+	opt.CodeRangeTo = to
+	return opt
 }
 
 func (jn *DBJournals) Fetch(opt DBJournalsFetchOption) ([]Journal, error) {
@@ -256,6 +267,14 @@ func (jn *DBJournals) Fetch(opt DBJournalsFetchOption) ([]Journal, error) {
 		for _, c := range opt.Code {
 			args = append(args, c)
 		}
+	}
+	if opt.CodeRangeFrom > 0 {
+		w = append(w, "? <= jn.code")
+		args = append(args, opt.CodeRangeFrom)
+	}
+	if opt.CodeRangeTo > 0 {
+		w = append(w, "? >= jn.code")
+		args = append(args, opt.CodeRangeTo)
 	}
 
 	if len(w) > 0 {
