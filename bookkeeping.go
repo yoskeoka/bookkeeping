@@ -193,6 +193,100 @@ func (bk *Bookkeeping) FetchPL(opt FetchPLOpts) (PL, error) {
 	return pl, nil
 }
 
+type BS struct {
+	Date time.Time
+
+	TotalCurrentAssets    int
+	TotalNoncurrentAssets int
+	TotalAssets           int
+
+	TotalCurrentLiabilities    int
+	TotalNoncurrentLiabilities int
+	TotalLiabilities           int
+
+	OwnersCapital             int
+	RetainedErnings           int
+	TotalEquity               int
+	TotalLiabilitiesAndEquity int
+}
+
+type FetchBSOpts struct {
+	Date time.Time
+}
+
+func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
+
+	bs := BS{}
+
+	dbOpt := DBJournalsFetchOption{}
+	if !opt.Date.IsZero() {
+		dbOpt.Before = sql.NullTime{Time: opt.Date, Valid: true}
+		bs.Date = opt.Date
+	} else {
+		bs.Date = time.Now()
+	}
+
+	currentAssets, err := bk.dbJn.Fetch(dbOpt.CodeRange(1100, 1199))
+	if err != nil {
+		return bs, err
+	}
+
+	bs.TotalCurrentAssets = sumJournal(currentAssets)
+
+	noncurrentAssets, err := bk.dbJn.Fetch(dbOpt.CodeRange(1200, 1299))
+	if err != nil {
+		return bs, err
+	}
+
+	bs.TotalNoncurrentAssets = sumJournal(noncurrentAssets)
+
+	bs.TotalAssets = bs.TotalCurrentAssets + bs.TotalNoncurrentAssets
+
+	currentLiabilities, err := bk.dbJn.Fetch(dbOpt.CodeRange(2100, 2199))
+	if err != nil {
+		return bs, err
+	}
+
+	bs.TotalCurrentLiabilities = sumJournal(currentLiabilities)
+
+	noncurrentLiabilities, err := bk.dbJn.Fetch(dbOpt.CodeRange(2200, 2299))
+	if err != nil {
+		return bs, err
+	}
+
+	bs.TotalNoncurrentLiabilities = sumJournal(noncurrentLiabilities)
+
+	bs.TotalLiabilities = bs.TotalCurrentLiabilities + bs.TotalNoncurrentLiabilities
+
+	ownersCapital, err := bk.dbJn.Fetch(dbOpt.CodeRange(3100, 3199))
+	if err != nil {
+		return bs, err
+	}
+
+	bs.OwnersCapital = sumJournal(ownersCapital)
+
+	retainedEarnings, err := bk.dbJn.Fetch(dbOpt.CodeRange(3200, 3299))
+	if err != nil {
+		return bs, err
+	}
+
+	plOpt := FetchPLOpts{}
+	if !opt.Date.IsZero() {
+		plOpt.End = opt.Date
+	}
+	pl, err := bk.FetchPL(plOpt)
+	if err != nil {
+		return bs, err
+	}
+
+	bs.RetainedErnings = sumJournal(retainedEarnings) + pl.NetIncome
+
+	bs.TotalEquity = bs.OwnersCapital + bs.RetainedErnings
+
+	bs.TotalLiabilitiesAndEquity = bs.TotalLiabilities + bs.TotalEquity
+	return bs, nil
+}
+
 func sumJournal(jnn ...[]Journal) int {
 	sum := 0
 
