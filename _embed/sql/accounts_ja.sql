@@ -1,3 +1,5 @@
+-- SQLite3
+
 insert into accounts(code, name, is_bs, is_left)
 values
 /* B/S科目 */
@@ -23,7 +25,7 @@ values
 -- 売上原価
 (5100, '期首商品棚卸高', FALSE, TRUE),
 (5200, '商品仕入高', FALSE, TRUE),
-(5300, '期末商品棚卸高', FALSE, FALSE),
+(5300, '期末商品棚卸高', FALSE, TRUE),
 -- 販売費及び一般管理費
 (7200, '給与・賞与', FALSE, TRUE),
 (7300, '経費', FALSE, TRUE),

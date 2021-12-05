@@ -137,45 +137,45 @@ func (bk *Bookkeeping) FetchPL(opt FetchPLOpts) (PL, error) {
 	if err != nil {
 		return pl, err
 	}
-	pl.NetSales = sumJournal(sales)
+	pl.NetSales = SumJournal(sales)
 
 	costSales, err := bk.dbJn.Fetch(dbOpt.CodeRange(5000, 6999))
 	if err != nil {
 		return pl, err
 	}
-	pl.CostSales = sumJournal(costSales)
+	pl.CostSales = SumJournal(costSales)
 	pl.GrossProfit = pl.NetSales - pl.CostSales
 
 	operatingExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(7000, 7999))
 	if err != nil {
 		return pl, err
 	}
-	pl.OperatingExpences = sumJournal(operatingExpences)
+	pl.OperatingExpences = SumJournal(operatingExpences)
 	pl.OperatingIncome = pl.GrossProfit - pl.OperatingExpences
 
 	nonOperatingIncomes, err := bk.dbJn.Fetch(dbOpt.CodeRange(8100, 8199))
 	if err != nil {
 		return pl, err
 	}
-	pl.NonOperatingIncomes = sumJournal(nonOperatingIncomes)
+	pl.NonOperatingIncomes = SumJournal(nonOperatingIncomes)
 
 	nonOperatingExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(8200, 8299))
 	if err != nil {
 		return pl, err
 	}
-	pl.NonOperatingExpences = sumJournal(nonOperatingExpences)
+	pl.NonOperatingExpences = SumJournal(nonOperatingExpences)
 
 	extraordinaryIncomes, err := bk.dbJn.Fetch(dbOpt.CodeRange(8300, 8399))
 	if err != nil {
 		return pl, err
 	}
-	pl.ExtraordinaryIncomes = sumJournal(extraordinaryIncomes)
+	pl.ExtraordinaryIncomes = SumJournal(extraordinaryIncomes)
 
 	extraordinaryExpences, err := bk.dbJn.Fetch(dbOpt.CodeRange(8400, 8499))
 	if err != nil {
 		return pl, err
 	}
-	pl.ExtraordinaryExpences = sumJournal(extraordinaryExpences)
+	pl.ExtraordinaryExpences = SumJournal(extraordinaryExpences)
 
 	pl.IncomeBeforeProvisionForIncomeTaxes = pl.OperatingIncome +
 		pl.NonOperatingIncomes - pl.NonOperatingExpences +
@@ -186,7 +186,7 @@ func (bk *Bookkeeping) FetchPL(opt FetchPLOpts) (PL, error) {
 		return pl, err
 	}
 
-	pl.ProvisionForIncomeTaxes = sumJournal(provisionForIncomeTaxes)
+	pl.ProvisionForIncomeTaxes = SumJournal(provisionForIncomeTaxes)
 
 	pl.NetIncome = pl.IncomeBeforeProvisionForIncomeTaxes - pl.ProvisionForIncomeTaxes
 
@@ -231,14 +231,14 @@ func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
 		return bs, err
 	}
 
-	bs.TotalCurrentAssets = sumJournal(currentAssets)
+	bs.TotalCurrentAssets = SumJournal(currentAssets)
 
 	noncurrentAssets, err := bk.dbJn.Fetch(dbOpt.CodeRange(1200, 1299))
 	if err != nil {
 		return bs, err
 	}
 
-	bs.TotalNoncurrentAssets = sumJournal(noncurrentAssets)
+	bs.TotalNoncurrentAssets = SumJournal(noncurrentAssets)
 
 	bs.TotalAssets = bs.TotalCurrentAssets + bs.TotalNoncurrentAssets
 
@@ -247,14 +247,14 @@ func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
 		return bs, err
 	}
 
-	bs.TotalCurrentLiabilities = sumJournal(currentLiabilities)
+	bs.TotalCurrentLiabilities = SumJournal(currentLiabilities)
 
 	noncurrentLiabilities, err := bk.dbJn.Fetch(dbOpt.CodeRange(2200, 2299))
 	if err != nil {
 		return bs, err
 	}
 
-	bs.TotalNoncurrentLiabilities = sumJournal(noncurrentLiabilities)
+	bs.TotalNoncurrentLiabilities = SumJournal(noncurrentLiabilities)
 
 	bs.TotalLiabilities = bs.TotalCurrentLiabilities + bs.TotalNoncurrentLiabilities
 
@@ -263,7 +263,7 @@ func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
 		return bs, err
 	}
 
-	bs.OwnersCapital = sumJournal(ownersCapital)
+	bs.OwnersCapital = SumJournal(ownersCapital)
 
 	retainedEarnings, err := bk.dbJn.Fetch(dbOpt.CodeRange(3200, 3299))
 	if err != nil {
@@ -279,7 +279,7 @@ func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
 		return bs, err
 	}
 
-	bs.RetainedErnings = sumJournal(retainedEarnings) + pl.NetIncome
+	bs.RetainedErnings = SumJournal(retainedEarnings) + pl.NetIncome
 
 	bs.TotalEquity = bs.OwnersCapital + bs.RetainedErnings
 
@@ -287,7 +287,7 @@ func (bk *Bookkeeping) FetchBS(opt FetchBSOpts) (BS, error) {
 	return bs, nil
 }
 
-func sumJournal(jnn ...[]Journal) int {
+func SumJournal(jnn ...[]Journal) int {
 	sum := 0
 
 	for _, jn := range jnn {
