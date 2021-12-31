@@ -10,8 +10,8 @@ func insertTransactionData(t *testing.T, tdb *bookkeeping.DB) {
 
 	bk := bookkeeping.NewBookkeeping(tdb)
 	if err := bk.Post([]bookkeeping.Journal{
-		{Date: date(2020, 5, 1), Code: 3100, Right: 500000, Description: "会社設立"},
 		{Date: date(2020, 5, 1), Code: 1110, Left: 500000, Description: "会社設立"},
+		{Date: date(2020, 5, 1), Code: 3100, Right: 500000, Description: "会社設立"},
 	}); err != nil {
 		t.Fatal(err)
 	}
