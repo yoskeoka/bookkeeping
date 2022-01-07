@@ -18,9 +18,10 @@ builds:
       - arm64
     goarm:
       - "7"
-    # ignore:
-    #   - goos: windows
-    #     goarch: arm64
+    ignore:
+      # build fails with this combination
+      - goos: windows
+        goarch: arm64
     ldflags:
       - -s -w -X github.com/yoskeoka/bookkeeping.CommitHash={{.Version}}
 archives:
